@@ -1,0 +1,184 @@
+
+1. Extend WebSecurityConfigurerAdapter.
+
+   @EnableWebSecurity //This is needed.
+   public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
+		private MyUserDetailsService myUserDetailsService; // THis is custom which we will create ahead.
+		
+		@Override
+		protected void configure() throws Exception {
+			auth.userDetailsService(myUserDetailsService);
+		}
+   
+		@Bean
+		public PasswordEncoder passwordEncoder(){
+			return NoOpPasswordEncoder.getInstance();
+		}
+   }
+   
+   public class MyUserDetailsService implements UserDetailsService{
+   
+	@Override
+	public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+			return new User ("foo", "foo", new ArrayList<>());
+	}
+   
+   }
+   
+   Add dependency :
+   <dependency>
+	<groupId>io.jsonwebtoken</groupId>
+	<artifactId>jjwt</artifactId>
+	<version>0.9.1</version>
+   </dependency>
+   
+   // You need jaxb as its not included in jdk since java 9
+    <dependency>
+	<groupId>javax.xml.bind</groupId>
+	<artifactId>jaxb-api</artifactId>
+	<version>2.3.0</version>
+   </dependency>
+   
+   Create JwtUtil for configuring JwtUtil.
+   
+   public class JwtUtil{
+   
+   private String generateToken(UserDetails userDetails){
+		Map<String,Object> claims = new HashMap<>();
+		return createToken(claims, userDetails.getUsername);
+   }
+   
+   private String createToken(Map<String , Object> claims , String subject){
+	 return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMilis()))
+	   .setExpiration(new Date (System.currentTimeMilis() + 1000*60*60*10))
+	   .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+	   // SECRET_KEY: is string as constant in the file.
+   }
+	
+	private Boolean isTokenExpired(){
+		return extractExpiration(token).before(new Date());
+	}
+   	
+	//Many more using Jwts
+ }
+ 
+ 
+ Step 1 :
+ 
+ /authenticate service:
+ -- Accepts user ID and password.
+ -- Returns JWT as response.
+ 
+ public class AuthenticationRequest {
+	
+	private String username;
+	private String password;
+	
+	//GetterSetter.
+	
+ }
+ 
+ public class AuthenticationReponse{
+ 
+	private String jwt ;
+	// Getter Setter.
+	
+ }
+ 
+ @Controller
+ public class HelloResource {
+ 
+	@Requestmapping(value = "/authenticate", method = RequestMethod.POST)
+	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest){
+		try{
+			authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername() , authenticationManager.getPassword());
+				
+			);
+		}catch(){
+			throw new Exception("Its failed");
+		}
+		
+		final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+		
+		final String jwt = jwtTokenUtil.generateToken(userDetails);
+		
+		return ResponseEntity.ok(new AuthenticationReponse(jwt));
+		
+	}
+ }
+ 
+ // Now you got to configure what to request.
+// in WebSecurityConfigurerAdapter class
+
+@Override
+protected void configure(HttpSecurity http) throws Exception{
+	http.csrf().disable().authorizeRequests().
+		antMatchers("/authenticate").permitAll().
+		  anyRequest().authenticated();
+
+}
+
+
+// This may be or may not be needed.
+@Override
+@Bean
+public AuthenticationManager authenticationManagerBean() throws Exception{
+
+	return super.authenticationManagerBean;
+}
+
+Step 2 
+Intercept all incoming requests
+
+- Extract JWT from the header 
+- Validate and set in execution context.
+
+Now you need to extend one of the filter
+
+Lets consider 
+
+@Component
+public class JwtRequestFilter extends OncePerRequestFilter {
+
+	@Autowired
+	private MyUserDetailsService userDetailsService;
+	
+	@Autowired JwtUtil jwtUtil;
+	
+
+	@Override 
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response , FilterChain chain) throws ..{
+		final String authorizationHeader = request.getHeader("Authorization");
+		String username = null;
+		String jwt = null;
+		
+		if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
+			jwt = authorizationHeader.subString(7);
+			username = jwtUtil.extractUsername(jwt);
+		}
+		
+		if(username!= null && SecurityContextHolder.getContext().getAuthentication() == null){
+			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+			if(jwtUtil.validateToken(jwt, userDetails)){
+				UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken 
+					= new UsernamePasswordAuthenticationToken(userDetails, null , userDetails.getAutorities());
+				usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+			}
+		}
+		chain.doFilter(request, response);
+	}
+}
+
+Now add filter:
+By adding few lines in websecurityconfigurerAdapter.
+
+@Override
+protected void configure(HttpSecurity http) throws Exception{
+	http.csrf().disable().authorizeRequests().
+		antMatchers("/authenticate").permitAll().
+		  anyRequest().authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+}
+ 

@@ -1,0 +1,951 @@
+https://www.udemy.com/course/angularjs-jumpstart/learn/lecture/1062170#overview
+
+SPA - single page application.
+Tech used:
+1. DOM manipulation.
+2. History.
+3. Routing.
+4. Ajax (Jquery)
+5. Data Binding (knockout Js.)
+6. more.
+
+All above is already in one .. AngularJS
+Full - Featured SPA framework.
+
+Steps.
+1. Reference the AngularJS script in an html.
+2. Add an ng-app directive.
+3. Bind data using directives.
+
+<script>xxx.angular.js</script>
+<html ng-app></html>
+
+<input type="text" ng-model="name" />{{ name }}
+
+
+----------------------
+Hello World
+
+<!doctype html>
+<html ng-app> //note this.
+	<head>
+		<title>AngularJS</title>
+	</head>
+	<body>
+		Name: <input type="text" ng-model="name" />
+		<br />
+		{{ name }}
+		<script src="angular.js"></script>
+	</body>
+</html>
+
+------------------------------------
+
+Key Players in AngularJS
+
+Module
+Routes.
+View / Directives / Filters.
+Controller / Factory / Service.
+$scope / $rootScope
+
+Module ---> (container)
+		Config --> 
+			Routes -->
+			   Factory / Service / Controllers / View.
+			   
+View 
+|
+$scope (glue)
+|
+Controller
+|
+View 
+Directives
+Filters.
+
+Data Binding Overview:
+
+Two-way data binding can lead to significant reductions in code.
+
+Controller oriented.
+1. Code assings value to textBox.
+  document.getElementById('name').value = 'John Doe';
+2. User modifies data 
+3. User clicks a button
+4. Code pulls the value out of the textbox.
+
+var name = document.getElementById('name').value;
+
+Data Oriented Development Workflow.
+
+1. Property is bound to a textbox.
+	<input type ="text" bindProperty="name" />
+2. User modifies data.
+3. Property value is automatically updated ! 
+	
+---------------------
+What are Directives?
+e.g ng-app directive 
+
+DOM Manipulation :
+ng-hide
+ng-repeat
+ng-show
+ng-view
+
+Modules / Controllers
+ng-app
+ng-controller -> knows which controller to load.
+
+Data Binding
+ng-bind -
+ng-init -> initialize 
+ng-model
+
+Events
+ng-click
+ng-keypress
+ng-mouseenter
+
+Directives can be used in multiple ways.
+
+<div ng-hide="isHidden">
+
+<div data-ng-hide="isHiddent">
+
+<ng-view></ng-view> -> marker to tell where to load the view.
+
+You can also add your own tags / directives.
+
+AngularJS Expressions 
+
+{{ 1 + 1}}
+
+----------------------------
+Directives in action.
+
+<body ng-init="name='James'"> //By this you will see it as initialized.
+Name : <input type="text" ng-model="name">{{ name }}
+
+<button ng-click"name='aditya'">Change name </button>
+
+<span ng-bind="name"> -- alternative for interpolation.
+
+Another difference is the way ng-bind and interpolation display the data. ng-bind calls the toString() method,
+ whereas interpolation uses a custom "stringify" function.
+ 
+<div ng-controller="showClockCtrl">
+    <p>The current time is {{currentDateTime}}.</p>
+    <p>The current time is <span ng-bind="currentDateTime"></span>.</p>
+</div>
+
+<div ng-controller="showClockCtrl">
+    <p>MyObject is {{myObject}}</p>
+    <p>MyObject is <span ng-bind="myObject"></span></p>
+</div>
+
+<script>
+var showClockCtrl = function ($scope) {
+    $scope.currentDateTime = new Date();
+    $scope.myObject = {
+        'key1': 'value1',
+        'key2': 'value2',
+        'key3': 'value3'
+    }
+};
+</script>
+
+O/P :: 
+The current time is "2017-11-18T15:09:59.429Z".
+
+The current time is Sat Nov 18 2017 10:09:59 GMT-0500 (EST).
+
+MyObject is {"key1":"value1","key2":"value2","key3":"value3"}
+
+MyObject is [object Object]
+
+------------
+ng-cloak : On load it will not give a flicker.
+ng-switch : 
+ng-init="data={name:'James', isVisible:true, loggedIn:false, status:'Red'}"
+<div ng-switch on="data.loggedIn">
+	<div ng-switch-when="true">
+	</div>
+	<div ng-switch-default> Login</div>
+</div>	
+
+ng-show="data.isVisible"
+
+ng-class="data.status" //Also make sure you have css class 'Red'
+
+ng-repeat:
+
+<div ng-init="names=['A','B','C']">
+
+<ul>
+	<li ng-repeat="name in names"> {{names}} </li>
+</ul>
+ 
+you can do same for objects.
+ 
+ <li ng-repeat="person in people">{{ person.name}} {{person.city}} </li>
+ Or
+ <li ng-repeat="person in people">{{ person.name + ' ' + person.city}} </li>
+ 
+<table>
+
+	<tr>
+		<td>name</td>
+		<td>city</td>
+	</tr>
+
+	<tr ng-repeat="person in people">
+		<td>{{person.name}}</td>
+		<td>{{person.city}}</td>
+	</tr>
+</table>
+
+----------------------------------
+
+Sorting and Filters
+
+Filters: (Using pipe)
+currency
+date
+filter
+json
+limitTo
+lowercase
+number
+orderBy
+uppercase
+
+---->Sorting.
+<ul>
+	<li data-ng-repeat="cust in customers | orderBy:'name'"> 
+		{{ cust.orderTotal | currency}}
+	</li>
+</ul>
+
+--->>Filtering Data.
+<input type="text" data-ng-model="nameText" />
+<ul>
+	<li data-ng-repeat="cust in customers | filter:nameText | orderBy:'name'" >
+	{{cust.name}} - {{cust.city}}
+</ul>
+
+---->> Customize currency.
+	{{ cust.orderTotal | currency='Rs.'}}
+---> Date format
+	{{ cust.joined | date:'yyyy-MM-dd'}}
+---> Case
+	{{cust.name | lowercase}}
+---> Limit data 
+	<tr ng-repeat="cust in customers" ! limitTo:2>
+
+<div ng-controller="SimpleController"> //--- This is very important part .
+<table>
+	<tr>
+		<th ng-click="doSort('name')">name</th>
+		<th ng-click="doSort('city')">city</th>
+		<th ng-click="doSort('orderTotal')">Order Total</th>
+		<th ng-click="doSort('joined')">Joined</th>
+	</tr>
+	<tr ng-repeat="customer in customers">
+		<td>{{customer.name}}</td>
+		<td>{{customer.city}}</td>
+		<td>{{customer.orderTotal | currency}}</td>
+		<td>{{customer.joined | date}}</td>
+	</tr>
+</table>
+	
+<script>
+	function SimpleController($scope){
+		$scope.sortBy = 'name';
+		$scope.reverse = false;
+		
+		$scope.customers = [
+			{name : 'Daniel', city : 'Mexico', orderTotal : 30, joined='2000-12-02'},
+			{name : 'Vishnu', city : 'USA', orderTotal : 40, joined='2000-12-02'},
+			{name : 'Aditya', city : 'India', orderTotal : 50, joined='2000-12-02'}
+		];
+		
+		$scope.doSort = function(propName){
+			$scope.sortBy = propName;
+			$scope.reverse = !$scope.reverse;
+		}
+	}
+</script>
+
+<div ng-controller="SimpleController as ctrl">
+We can use above way as well , this is useful in case of cascaded controllers.
+Easier to identify the property is coming from which controller.
+Also in this scenario you have to write controller as below.
+
+	
+<script>
+	function SimpleController(){
+		this.sortBy = 'name';
+		this.reverse = false;
+		
+		this.customers = [
+			{name : 'Daniel', city : 'Mexico', orderTotal : 30, joined='2000-12-02'},
+			{name : 'Vishnu', city : 'USA', orderTotal : 40, joined='2000-12-02'},
+			{name : 'Aditya', city : 'India', orderTotal : 50, joined='2000-12-02'}
+		];
+		
+		this.doSort = function(propName){
+			this.sortBy = propName;
+			this.reverse = !$scope.reverse;
+		}
+	}
+</script>
+
+--------------------------
+Modules are container.
+
+It has filter,directectives , config , routes almost everything.
+
+
+var demoApp = angular.module('demoApp', []);
+
+//Injecting other module is possible.
+var demoApp = angular.module('demoApp', [helperModule]);
+
+we generally do this in app.js.
+If you add app.js in the html with above line.
+
+your app won't work , because the you changed ng-app="demoApp".
+But there is nothing which ng-app demoApp has , it doesn't has the SimpleController.
+
+So you need to add the controller to the module.
+
+demoApp.controller('SimpleController', function($scope){
+$scope.customers = [
+			{name : 'Daniel', city : 'Mexico', orderTotal : 30, joined='2000-12-02'},
+			{name : 'Vishnu', city : 'USA', orderTotal : 40, joined='2000-12-02'},
+			{name : 'Aditya', city : 'India', orderTotal : 50, joined='2000-12-02'}
+		];
+});
+
+option 2 :
+
+angular.module('demoApp').controller('SimpleController', function($scope){
+
+option 3 : using iife
+
+var demoApp = angular.module('demoApp', [])'
+
+...
+
+(function(){
+	var SimpleController = function ($scope){
+		$scope.customers = [
+		// whatever
+		];	
+	};
+	
+	angular.module('demoApp').controller('SimpleController', SimpleController);
+
+}()); // Note its and self invoked function.
+
+Minification ----> 
+1. you don't need to give [] for module. Note ['$scope']
+angular.module('demoApp')
+	.controller('SimpleController', ['$scope', function ($scope){
+		$scope.customers  = [..];
+	}])
+
+2. Create function and inject it .
+
+SimpleController.$inject = ['$scope']; //Note this.
+
+angular.module('').controller('SimpleController', SimpleController);
+
+$inject will automatically take care of injecting dependency in the controller.
+
+Running example ::
+
+Option 1:
+var app = angular.module('customersApp', []);
+
+app.controller('CustomersController', function ($scope){
+ ...
+})
+
+Option 2:
+(function(){
+	var app = angular.module('customersApp', []);
+}());
+
+Now app can't be accessed outside due to privatization due to IIFE.
+so you can do as below. (also you can put below code was in IIFE)
+angular.module('customersApp')..controller('CustomersController', function ($scope){
+ ...
+})
+
+Option 3:
+Below way you can focus on functionality keeping it in function , then and anonymous function.
+
+
+var CustomersController = function ($scope){
+	$scope.customers = [..];
+}
+
+angular.module('customersApp')..controller('CustomersController',CustomersController)
+
+-------------------------------------
+Parameter injection .
+
+Suppose there is more to pass to controller.
+
+angular.module('customersApp')
+.controller('CustomersController', ['$scope','foo','bar', CustomersController]);
+
+var CustomersController = function ($scope, foo, bar){
+	$scope.customers = [..];
+}
+
+below also works :
+var CustomersController = function (a, b, c){
+	$scope.customers = [..];
+
+}
+
+Option 2 :
+Using $inject.
+
+CustomersController.$inject = ['$scope','foo','bar'];
+function CustomersController(a,b,c){..}
+angular.module('customersApp')
+.controller('CustomersController',CustomersController);
+
+
+------------->
+Why foo and bar?
+"Foo" and "bar" as metasyntactic variables were popularised by MIT and DEC, the first references are in work on LISP and PDP-1 and Project MAC from 1964 onwards.
+
+Many of these people were in MIT's Tech Model Railroad Club, where we find the first documented use of "foo" in tech circles in 1959 (and a variant in 1958).
+
+Both "foo" and "bar" (and even "baz") were well known in popular culture, especially from Smokey Stover and Pogo comics, which will have been read by many TMRC members.
+
+Also, it seems likely the military FUBAR contributed to their popularity.
+
+
+-------------<
+
+---------------------------------
+Routing.
+
+Using ngRoute, configuring routes, ng-view.
+
+AngularJS routes associate a view with a controller.
+
+/customers -> customers.html / customersControllers.
+
+Relies on ngRoute module.
+
+Routes configured using $routeProvider.
+
+Routes configured by calling angular.module.config().
+
+$routeProvider has the responsibility to load correct view.
+on which url what to load.
+
+-----------------
+Reference ngRoute.
+
+var demo = angular.module('demoApp',['ngRoute']);
+
+Also, you need to pull the script anguar-route.js in <script>
+
+--------
+config routes.
+
+demo.config(function($routeProvider){
+	$routeProvider.when('/',{
+		controller: 'CustomersController',
+		templateUrl: '/app/views/customers.html'
+	})
+	.when('/orders',
+	{
+		controller: 'OrderController',
+		templateUrl: '/app/views/orders.html'
+	})
+	.when('/editCustomer/:customerId', { <<<<-------- important route params.
+		controller: 'EditController',
+		templateUrl: '/app/views/editCustomer.html'
+	})
+	.otherwise({ redirectTo: '/'});
+});
+
+How to access customerId from params.
+
+app.controller('EditController', function($scope, $routeParams){
+	$scope.customerId = $routeParams.customerId;
+});
+
+---------------------------------
+ng-view 
+
+Two ways to use it.
+
+<div ng-view></div>
+
+<ng-view></ng-view>
+
+Just add ng-view to html as above. And everything should work. with route ! 
+
+Now consider passing parameter from route.
+
+<td><a href="#/orders/{{cust.id}}"> View</td>
+
+------------------------------------
+Factories and Services.
+
+There are build in factories.
+And Factories and Service are Singleton.
+
+Build in services:
+$http - ajax calls
+$timeout - same as setTimeout
+$window
+$location - Actual url details
+$q - used for async process like ajax.
+$rootScope - share between scope.
+$interval - for repeative timer.
+$filter - creating custom filter can be access in controller.
+$log - you can use it for general loggin purpose.
+
+How to create factory.
+
+Used to define re-useable tasks.
+Share code or state between controllers.
+
+Creates and return custom object.
+Created using the module.factory()
+
+var customersFactory = function(){
+	var customers = [...];
+	var factory ={};
+	factory.getCustomers = function(){
+		return customers;
+	}
+	return factory;
+}
+
+angular.module('customersApp').factory('customersFactory', customersFactory);
+
+Alternate way is :
+
+var customersFactory = function(){
+	var customers = [...];
+	var factory ={};
+	return {
+		getCustomers = function(){
+		return customers;
+		}
+	};
+};
+
+How to use it ??
+
+var CustomersController = function($scope,customersFactoy){
+	function init{
+		$scope.customers = cusomersFactory.getCustomers();
+	}
+}
+
+CustomersController.$inject = ['$scope','customersFactory'];
+
+angular.module('customersApp')
+	.controller('CustomersController', CustomersController);
+angular.module('customersApp').factory('customersFactory', customersFactory);
+
+---------------------------------------------
+Creating services.
+
+1. Key difference is , Service function represents the returned instance
+whereas are you have to get object from the factory (it could be function as well).
+
+"That's because while myInjectedService must always be an object, myInjectedFactory can be an object, a function reference, or any value at all."
+2. Created using module.service() function.
+
+var customersFactory = function(){
+	var customers = [...];
+	
+	this.getCustomers = function(){  //here is the difference. we use 'this' keyword
+		return customers;
+	};
+};
+	
+angular.modue.('customersApp').service('customersService', customersService);
+
+How to use it ??
+Also service is used same way as factory.
+
+var CustomersController = function($scope,customersService){
+	function init{
+		$scope.customers = customersService.getCustomers();
+	}
+}
+
+--------------->
+When factory and when service.
+
+If you use a service you will get the instance of a function ("this" keyword).
+If you use a factory you will get the value that is returned by invoking the function reference (the return statement in factory).
+
+Service: the function that you write will be new-ed:
+
+  myInjectedService  <----  new myServiceFunction()
+Factory: the function (constructor) that you write will be invoked:
+
+  myInjectedFactory  <---  myFactoryFunction()
+
+-----------<
+------>
+The idea that all services are singletons does not stop you from writing singleton factories that can instantiate new objects.
+myApp.factory('myService', function () {
+  var MyThing = function () {};
+  MyThing.prototype.foo = function () {};
+  return {
+    getInstance: function () {
+      return new MyThing();
+    }
+  };
+});
+------<
+http calls with factory:
+
+studentApp.factory('studentSession', function($http){
+    return {
+        getSessions: function() {
+            return $http.post('/services', { 
+                type : 'getSource',
+                ID    : 'TP001'
+            });
+        }
+    };
+});
+
+studentApp.controller('studentMenu',function($scope, studentSession){
+    $scope.variableName = [];
+
+    var handleSuccess = function(data, status) {
+        $scope.variableName = data;
+        console.log($scope.variableName);
+    };
+
+    studentSession.getSessions().success(handleSuccess);
+});
+
+---------------------------------
+
+One more example:: Better handling in controller. Getting odd records.
+
+app.factory('customer', ['$http', function($http) {
+    var all, odds = [];
+    var getData = function() {
+        return $http.get("http://www.w3schools.com/angular/customers.php")
+        .then(function(response) {
+          all = response.records;
+          angular.forEach(all, function(c, i) {
+            if (i % 2 == 1) {
+              odds.push(c);
+            }
+          });
+          return odds
+        });
+    }
+    return {
+        getData: getData 
+    };
+}]);
+
+app.controller('customersCtrl', ['$scope','customer',function($scope, customer) {
+    customer.getData().then(function(response){
+         $scope.odds = response;
+    });
+}]);
+------------
+One more way for above example :
+I took the liberty to modify your code to return a promise from the factory, so you can set the value as soon as the promise is resolved.
+
+var app = angular.module('myApp', []);
+
+app.controller('customersCtrl', ['$scope','customer',function($scope, customer) {
+  customer.then(function(data){
+    $scope.odds = data.odds;
+    customer.then(function(data){
+      console.log(data);
+    });
+  });
+}]);
+
+app.factory('customer', ['$http', function($http) {
+  var all = [{'Id':88, 'Name':"A"}, {'Id':89, 'Name':"ShoutNotBeHere"}]; 
+  var odds = [];
+  return $http.get("http://www.w3schools.com/angular/customers.php")
+    .then(function(response) {
+      all = response.data.records;
+      angular.forEach(all, function(c, i) {
+      if (i % 2 == 1) {
+        c.Id = i;
+        odds.push(c);
+      }
+    });
+    return {odds: odds};
+  });
+}]);
+
+------------------------
+For http service its best to use service as we can hit the async call !
+Below is the best example. 
+
+https://stackoverflow.com/questions/46341743/angularjs-http-request-inside-service
+
+----------------
+Services
+Syntax: module.service( 'serviceName', function );
+Result: When declaring serviceName as an injectable argument you will be provided with an instance of the function. In other words new FunctionYouPassedToService().
+
+Factories
+Syntax: module.factory( 'factoryName', function );
+Result: When declaring factoryName as an injectable argument you will be provided with the value that is returned by invoking the function reference passed to module.factory.
+
+Providers
+Syntax: module.provider( 'providerName', function );
+Result: When declaring providerName as an injectable argument you will be provided with (new ProviderFunction()).$get(). The constructor function is instantiated before the $get method is called - ProviderFunction is the function reference passed to module.provider.
+
+Provider is bigger set :
+ sisApp.provide = $provide;
+ sisApp.serviceProvider = $provide.service;
+ sisApp.factoryProvider = $provide.factory;
+ 
+ serviceProvider is something which dpa uses.
+ ---------------------->
+ Advance way to use routeProvider
+ 
+ In each resolve property, you can have a function that lets Angular inject services for you to use:
+
+$routeProvider
+  .when('/students/some/path/:id', {
+    templateUrl: 'views/studentRecord.html',
+    controller:  'StudentsController',
+    resolve:     { myVar: 'test' }
+  }); 
+ 
+resolve: {
+    myVar1: function(testService) { return testService.fetchList1(); },
+    myVar2: function(anotherService, $http) {
+        // call service functions to mongo-db or what have you
+        return result;
+    }
+}
+Then, your controller, just inject the properties:
+
+// myVar1 and myVar2 are now here
+app.controller('StudentsController', function($scope, myVar1, myVar2) {
+    /* ... */
+});
+ 
+ 
+ ------------------<
+Constants and Values
+Value: Can't be injected into config.
+angular.module('customerApp').value('version','1.0.1');
+
+Can be injected into config()
+angular.module('customerApp').constant('version','1.0.1');
+
+Real life use :
+angular.module('customerApp').constant('version',{
+ title: 'Customer Application',
+ version : '1.0'
+});
+
+How to use it :
+var CustomersController = function($scope,appSettings){
+	$scope.appSettings = appSettings;
+}
+
+CustomersController.$inject('$scope','appSettings');
+angular.module('customersApp')
+	.controller('CustomersController', CustomersController);
+
+	
+html: {{appSettings.title}}
+
+--------------------------------
+
+Ajax is provided using $http service.
+Under the hood XmlHttpRequest object of windows object is used.
+
+$http is always async request.
+
+Supports : $http.head , $http.put , $http.get , $http.delete, $http.post, $http.jsonp
+
+$http makes asynchronous calls.
+1. Relies on $q service's deffered/promise api's.
+2. Access data by calling then() or success()/error().
+
+customersFactory.getCustomers().success( function (customers){
+		$scope.customers = customers;
+	})
+	.error(function (data, status , headers, config){
+		//handle error.
+	});
+-----------------------------
+
+Using $log
+
+pass $log service 
+This just puts it on console .
+Well why to use $log ?
+Using $log has a downside as well: if you use console.log you can see the file and the line number of the actual logging. With $log it will always show angular.js as the source of the log in your console.
+
+Another bonus, it allows you to turn off debug logging in production, with $logProvider.debugEnabled(false);
+-------------------------
+How to create custom directive.
+
+var app = angular.module('directivesModule', []);
+
+app.directive('helloWorld', function()){
+	return{
+		template: 'Hello World';
+	};
+}
+
+<hello-world><hello-world>
+
+-------------------------------
+Directive categories.
+
+DOM driven directives. - Manipulation of DOM
+Behavior-driven Derectives - All about handling DOM events.
+
+Directive types:
+
+1.Attribute directive
+<span my-dir="exp"></span>
+2.Element directives.
+<my-dir></my-dir>
+3.CSS class directives.
+<span class="my-dir: exp;"></span>
+4.Comment directives : useless
+
+
+Directive Building blocks 
+
+$compile->Directive definition Object -> template -> scope.
+
+$compile : Compiles an HTML string or DOM into a template and procuces a template function,
+which can then be used to link scope and the template together.
+
+$compile an the Directive definition object (DDO)
+
+$compile provider relies on a Directive Definition Object (DDO)
+
+Features of the DDO.
+1. Defines the template for the directive.
+2. can include dom manipulation code.
+3. can define a controller for the directive.
+4. controls the directive's scope .
+5. Defines how the directive can be used.
+
+DDO properties :
+restrict , template , templateUrl
+scope, controller , link 
+
+angular.module('moduleName')
+ .directive('myDirective', function(){
+	return {
+		restrict : 'EA',
+		scope:{},
+		template:'<div>{{myVal}}</div>',
+		controller: controller,
+		link: function(scope,element, attrs){}
+	}
+ })
+
+ Custome Directive restrict in dpa:
+ 
+     .directive('restrict', function (authService, localize) {
+        return {
+            restrict: 'A',
+            link: function () {
+            },
+            compile: function (element, attr, linker) {
+                checkPermissionsAndProcess(element, attr, authService, localize);
+            }
+        }
+    })
+	
+	
+function checkPermissionsAndProcessForUserManagement(element, attr, authService, localize) {
+    var accessDenied = true;
+    var domainPermissions = attr.permissions.split(" ");
+    var domains = authService.getDomains();
+    var auth_enable = localize.getLocalizedString('authorization.enable');
+    if (auth_enable.toLowerCase() == 'true') {
+        for (var i = 0; i < domains.length; i++) {
+            var userPermissions = authService.getPermissions(domains[i].resource);
+            if (userPermissions != null) {
+                for (var j = 0; j < userPermissions.length; j++) {
+                    for (var k = 0; k < domainPermissions.length; k++) {
+                        if (userPermissions[j].toLowerCase() == localize.getLocalizedString(domainPermissions[k]).toLowerCase()) {
+                            accessDenied = false;
+                            break;
+                        }
+                    }
+                    //break;
+                }
+            }
+            if (!accessDenied) {
+                break;
+            }
+        }
+
+    } else {
+        accessDenied = false;
+    }
+    if (accessDenied) {
+        element.children().remove();
+        element.remove();
+
+    }
+
+};
+
+------ Above directive just removes all the child element and the element itself.
+
+-- STill need to read 
+
+scope:{} // Isolate Scope. DAta will not display from template.
+if thats not created controller shares data with directive.
+
+$apply , $watch.
+
+
+According to the section Scope Life Cycle in the scope documentation (v1.6.10) there are not such hooks (using the ng-controller approach).
+
+The scope lifecycle would go like this:
+
+Creation
+The root scope is created during the application bootstrap by the $injector. During template linking, some directives create new child scopes.
+
+Watcher registration
+During template linking, directives register watches on the scope. These watches will be used to propagate model values to the DOM.
+
+Model mutation
+For mutations to be properly observed, you should make them only within the scope.$apply(). AngularJS APIs do this implicitly, so no extra $apply call is needed when doing synchronous work in controllers, or asynchronous work with $http, $timeout or $interval services.
+
+Mutation observation
+At the end of $apply, AngularJS performs a $digest cycle on the root scope, which then propagates throughout all child scopes. During the $digest cycle, all $watched expressions or functions are checked for model mutation and if a mutation is detected, the $watch listener is called.
+
+Scope destruction
+When child scopes are no longer needed, it is the responsibility of the child scope creator to destroy them via scope.$destroy() API. This will stop propagation of $digest calls into the child scope and allow for memory used by the child scope models to be reclaimed by the garbage collector.
+
+These include $onInit, $onChanges, $onDestroy, and $postLink

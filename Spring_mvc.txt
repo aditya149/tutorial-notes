@@ -1,0 +1,766 @@
+Spring MVC .
+
+Spring IoC Container
+Spring IoC is the mechanism to achieve loose-coupling between Objects dependencies. To achieve loose coupling and dynamic binding of the objects at runtime, objects dependencies are injected by other assembler objects. Spring IoC container is the program that injects dependencies into an object and make it ready for our use.
+
+Dependency Injection is implementation of IOC .
+
+1. MVC architecture.
+
+Spring container types :
+
+x.BeanFactory 
+This is the simplest container providing the basic support for DI and is defined by the org.springframework.beans.factory.BeanFactory interface. The BeanFactory and related interfaces, such as BeanFactoryAware, InitializingBean, DisposableBean, are still present in Spring for the purpose of backward compatibility with a large number of third-party frameworks that integrate with Spring.
+
+xx.ApplicationContext
+This container adds more enterprise-specific functionality such as the ability to resolve textual messages from a properties file and the ability to publish application events to interested event listeners. This container is defined by the org.springframework.context.ApplicationContext interface.
+
+Define beans manually: 
+<!-- A simple bean definition -->
+   <bean id = "..." class = "...">
+      <!-- collaborators and configuration for this bean go here -->
+   </bean>
+
+   <!-- A bean definition with lazy init set on -->
+   <bean id = "..." class = "..." lazy-init = "true">
+      <!-- collaborators and configuration for this bean go here -->
+   </bean>
+
+   <!-- A bean definition with initialization method -->
+   <bean id = "..." class = "..." init-method = "...">
+      <!-- collaborators and configuration for this bean go here -->
+   </bean>
+
+   <!-- A bean definition with destruction method -->
+   <bean id = "..." class = "..." destroy-method = "...">
+      <!-- collaborators and configuration for this bean go here -->
+   </bean>
+   
+Bean Scopes:
+The Spring Framework supports the following five scopes, three of which are available only if you use a web-aware ApplicationContext.
+1	singleton
+
+This scopes the bean definition to a single instance per Spring IoC container (default).
+
+2	prototype
+
+This scopes a single bean definition to have any number of object instances.
+
+3	request
+
+This scopes a bean definition to an HTTP request. Only valid in the context of a web-aware Spring ApplicationContext.
+
+4	session
+
+This scopes a bean definition to an HTTP session. Only valid in the context of a web-aware Spring ApplicationContext.
+5	global-session
+
+This scopes a bean definition to a global HTTP session. Only valid in the context of a web-aware Spring ApplicationContext.
+
+
+context.registerShutdownHook(); is needed in order to shutdown spring and run destroy method of bean.
+
+Bean Life cycle::
+postProcessBeforeInitialization --> BeforeInitialization : helloWorld
+init-method --> Bean is going through init.
+postProcessAfterInitialization  --> AfterInitialization : helloWorld
+actual business --> Your Message : Hello World!
+destroy-method --> Bean will destroy now.
+
+Dependency Injection:
+<beans xmlns = "http://www.springframework.org/schema/beans"
+   xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation = "http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id = "helloWorld" class = "com.tutorialspoint.HelloWorld">
+      <property name = "message1" value = "Hello World!"/>
+      <property name = "message2" value = "Hello Second World!"/>
+   </bean>
+
+   <bean id ="helloIndia" class = "com.tutorialspoint.HelloIndia" parent = "helloWorld">
+      <property name = "message1" value = "Hello India!"/>
+      <property name = "message3" value = "Namaste India!"/>
+   </bean>
+</beans>
+
+public class MainApp {
+   public static void main(String[] args) {
+      ApplicationContext context = new ClassPathXmlApplicationContext("Beans.xml");
+      
+      HelloWorld objA = (HelloWorld) context.getBean("helloWorld");
+      objA.getMessage1();
+      objA.getMessage2();
+
+      HelloIndia objB = (HelloIndia) context.getBean("helloIndia");
+      objB.getMessage1();
+      objB.getMessage2();
+      objB.getMessage3();
+   }
+}
+
+Output --> 
+World Message1 : Hello World!
+World Message2 : Hello Second World!
+India Message1 : Hello India!
+India Message2 : Hello Second World!
+India Message3 : Namaste India!
+   
+We can also mark parent bean as abstract 
+<bean id = "beanTeamplate" abstract = "true">
+
+Dependency Injection Type & Description
+Constructor-based DI -->
+Constructor-based DI is accomplished when the container invokes a class constructor with a number of arguments, each representing a dependency on the other class.
+
+Setter-based DI  --> 
+Setter-based DI is accomplished by the container calling setter methods on your beans after invoking a no-argument constructor or no-argument static factory method to instantiate your bean.
+
+Dependency Injection:
+ <!-- Definition for textEditor bean using inner bean -->
+   <bean id = "textEditor" class = "com.tutorialspoint.TextEditor">
+      <property name = "spellChecker">
+         <bean id = "spellChecker" class = "com.tutorialspoint.SpellChecker"/>
+      </property>
+   </bean>
+   
+ Pushing collection as dependency:   
+ <!-- Definition for javaCollection -->
+   <bean id = "javaCollection" class = "com.tutorialspoint.JavaCollection">
+      
+      <!-- results in a setAddressList(java.util.List) call -->
+      <property name = "addressList">
+         <list>
+            <value>INDIA</value>
+            <value>Pakistan</value>
+            <value>USA</value>
+            <value>USA</value>
+         </list>
+      </property>
+
+      <!-- results in a setAddressSet(java.util.Set) call -->
+      <property name = "addressSet">
+         <set>
+            <value>INDIA</value>
+            <value>Pakistan</value>
+            <value>USA</value>
+            <value>USA</value>
+         </set>
+      </property>
+
+      <!-- results in a setAddressMap(java.util.Map) call -->
+      <property name = "addressMap">
+         <map>
+            <entry key = "1" value = "INDIA"/>
+            <entry key = "2" value = "Pakistan"/>
+            <entry key = "3" value = "USA"/>
+            <entry key = "4" value = "USA"/>
+         </map>
+      </property>
+      
+      <!-- results in a setAddressProp(java.util.Properties) call -->
+      <property name = "addressProp">
+         <props>
+            <prop key = "one">INDIA</prop>
+            <prop key = "one">INDIA</prop>
+            <prop key = "two">Pakistan</prop>
+            <prop key = "three">USA</prop>
+            <prop key = "four">USA</prop>
+         </props>
+      </property>
+   </bean>
+
+</beans>
+ 
+ Injecting reference beans :
+ 
+ <!-- Bean Definition to handle references and values -->
+   <bean id = "..." class = "...">
+
+      <!-- Passing bean reference  for java.util.List -->
+      <property name = "addressList">
+         <list>
+            <ref bean = "address1"/>
+            <ref bean = "address2"/>
+            <value>Pakistan</value>
+         </list>
+      </property>
+      
+      <!-- Passing bean reference  for java.util.Set -->
+      <property name = "addressSet">
+         <set>
+            <ref bean = "address1"/>
+            <ref bean = "address2"/>
+            <value>Pakistan</value>
+         </set>
+      </property>
+      
+      <!-- Passing bean reference  for java.util.Map -->
+      <property name = "addressMap">
+         <map>
+            <entry key = "one" value = "INDIA"/>
+            <entry key = "two" value-ref = "address1"/>
+            <entry key = "three" value-ref = "address2"/>
+         </map>
+      </property>
+   </bean>
+   
+ Autowiring Modes--->
+1. ByName:
+Autowiring by property name. Spring container looks at the properties of the beans on which autowire attribute is set to byName in the XML configuration file. It then tries to match and wire its properties with the beans defined by the same names in the configuration file.
+
+2. ByType:
+Autowiring by property datatype. Spring container looks at the properties of the beans on which autowire attribute is set to byType in the XML configuration file. It then tries to match and wire a property if its type matches with exactly one of the beans name in configuration file. If more than one such beans exists, a fatal exception is thrown.
+
+3.Constructor:
+Similar to byType, but type applies to constructor arguments. If there is not exactly one bean of the constructor argument type in the container, a fatal error is raised.
+
+4.autodetect:
+Spring first tries to wire using autowire by constructor, if it does not work, Spring tries to autowire by byType.
+
+LIMITATIONS:
+Overriding possibility -->
+You can still specify dependencies using <constructor-arg> and <property> settings which will always override autowiring.
+
+Primitive data types -->
+You cannot autowire so-called simple properties such as primitives, Strings, and Classes. 
+   
+Confusing nature-->   
+Autowiring is less exact than explicit wiring, so if possible prefer using explict wiring.  
+
+Whats' there in <context:annotation-config/> :--------->
+
+@Required
+The @Required annotation applies to bean property setter methods.
+
+@Autowired
+The @Autowired annotation can apply to bean property setter methods, non-setter methods, constructor and properties.	
+
+@Qualifier
+The @Qualifier annotation along with @Autowired can be used to remove the confusion by specifiying which exact bean will be wired
+
+JSR-250 : 
+Spring supports JSR-250 based annotations which include @Resource, @PostConstruct and @PreDestroy annotations.
+
+2. MVC configuration :
+
+i. web.xml
+<web-app id = "WebApp_ID" version = "2.4"
+   xmlns = "http://java.sun.com/xml/ns/j2ee" 
+   xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation = "http://java.sun.com/xml/ns/j2ee 
+   http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+    
+   <display-name>Spring MVC Application</display-name>
+   
+   <servlet>
+      <servlet-name>HelloWeb</servlet-name>
+      <servlet-class>
+         org.springframework.web.servlet.DispatcherServlet
+      </servlet-class>
+      <load-on-startup>1</load-on-startup>
+   </servlet>
+
+   <servlet-mapping>
+      <servlet-name>HelloWeb</servlet-name>
+      <url-pattern>*.jsp</url-pattern>
+   </servlet-mapping>
+
+</web-app>
+
+The web.xml file will be kept in the WebContent/WEB-INF directory of your web application. Upon initialization of HelloWeb DispatcherServlet, the framework will try to load the application context from a file named [servlet-name]-servlet.xml located in the application's WebContent/WEB-INFdirectory. In this case, our file will be HelloWebservlet.xml.
+
+If you do not want to go with default filename as [servlet-name]-servlet.xml and default location as WebContent/WEB-INF, you can customize this file name and location by adding the servlet listener ContextLoaderListener in your web.xml file as follows −
+
+
+<web-app...>
+
+   <!-------- DispatcherServlet definition goes here----->
+   ....
+   <context-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>/WEB-INF/HelloWeb-servlet.xml</param-value>
+   </context-param>
+
+   <listener>
+      <listener-class>
+         org.springframework.web.context.ContextLoaderListener
+      </listener-class>
+   </listener>
+   
+</web-app>
+
+ii. HelloWeb-servlet.xml
+<beans xmlns = "http://www.springframework.org/schema/beans"
+   xmlns:context = "http://www.springframework.org/schema/context"
+   xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation = "http://www.springframework.org/schema/beans     
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/context 
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+   <context:component-scan base-package = "com.tutorialspoint" />
+
+   <bean class = "org.springframework.web.servlet.view.InternalResourceViewResolver"> /////////********* Hey There can be mutliple view resolvers in cascade.
+      <property name = "prefix" value = "/WEB-INF/jsp/" />
+      <property name = "suffix" value = ".jsp" />
+   </bean>
+
+</beans>
+
+iii. HelloController.java
+@Controller
+@RequestMapping("/hello")
+public class HelloController { 
+   @RequestMapping(method = RequestMethod.GET)
+   public String printHello(ModelMap model) {
+      model.addAttribute("message", "Hello Spring MVC Framework!");
+      return "hello";
+   }
+}
+
+you can also use ModelAndView.
+
+iv. JSP
+<html>
+   <head>
+      <title>Hello Spring MVC</title>
+   </head>
+   
+   <body>
+      <h2>${message}</h2>
+   </body>
+</html>
+
+iv. Example with ModelAndView and Post call.
+@Controller
+public class StudentController {
+   @RequestMapping(value = "/student", method = RequestMethod.GET)
+   public ModelAndView student() {
+      return new ModelAndView("student", "command", new Student()); //This is to bind Student with the UI component.
+   }
+   @RequestMapping(value = "/addStudent", method = RequestMethod.POST)
+      public String addStudent(@ModelAttribute("SpringWeb")Student student, 
+   
+   ModelMap model) {
+      model.addAttribute("name", student.getName());
+      model.addAttribute("age", student.getAge());
+      model.addAttribute("id", student.getId());
+      
+      return "result";
+   }
+}
+
+HTML:
+<%@taglib uri = "http://www.springframework.org/tags/form" prefix = "form"%>
+<html>
+   <head>
+      <title>Spring MVC Form Handling</title>
+   </head>
+
+   <body>
+      <h2>Student Information</h2>
+      <form:form method = "POST" action = "/HelloWeb/addStudent">
+         <table>
+            <tr>
+               <td><form:label path = "name">Name</form:label></td>
+               <td><form:input path = "name" /></td>
+            </tr>
+            <tr>
+               <td><form:label path = "age">Age</form:label></td>
+               <td><form:input path = "age" /></td>
+            </tr>
+            <tr>
+               <td><form:label path = "id">id</form:label></td>
+               <td><form:input path = "id" /></td>
+            </tr>
+            <tr>
+               <td colspan = "2">
+                  <input type = "submit" value = "Submit"/>
+               </td>
+            </tr>
+         </table>  
+      </form:form>
+   </body>
+   
+</html>
+
+result.jsp.
+%@page contentType = "text/html;charset = UTF-8" language = "java" %>
+<%@page isELIgnored = "false" %>
+<%@taglib uri = "http://www.springframework.org/tags/form" prefix = "form"%>
+<html>
+   <head>
+      <title>Spring MVC Form Handling</title>
+   </head>
+
+   <body>
+      <h2>Submitted Student Information</h2>
+      <table>
+         <tr>
+            <td>Name</td>
+            <td>${name}</td>
+         </tr>
+         <tr>
+            <td>Age</td>
+            <td>${age}</td>
+         </tr>
+         <tr>
+            <td>ID</td>
+            <td>${id}</td>
+         </tr>
+      </table>  
+   </body>
+   
+</html>
+
+Annotation Based configuration:
+ ApplicationContext ctx = 
+         new AnnotationConfigApplicationContext(TextEditorConfig.class);
+
+
+@Configuration
+public class TextEditorConfig {
+   @Bean 
+   public TextEditor textEditor(){
+      return new TextEditor( spellChecker() );
+   }
+
+   @Bean 
+   public SpellChecker spellChecker(){
+      return new SpellChecker( );
+   }
+}
+
+The @Import Annotation
+@Configuration
+@Import(ConfigA.class)
+public class ConfigB {
+   @Bean
+   public B b() {
+      return new B(); 
+   }
+}
+
+@Configuration
+public class AppConfig {
+   @Bean
+   @Scope("prototype")
+   public Foo foo() {
+      return new Foo();
+   }
+}
+
+If you load ConfigB then ConfigA.class also is initialized.
+
+Event Handling:
+1.ContextRefreshedEvent
+This event is published when the ApplicationContext is either initialized or refreshed. This can also be raised using the refresh() method on the ConfigurableApplicationContext interface.
+
+2.ContextStartedEvent
+This event is published when the ApplicationContext is started using the start() method on the ConfigurableApplicationContext interface. You can poll your database or you can restart any stopped application after receiving this event.
+
+3, ContextStoppedEvent
+This event is published when the ApplicationContext is stopped using the stop() method on the ConfigurableApplicationContext interface. You can do required housekeep work after receiving this event.
+
+4.ContextClosedEvent
+This event is published when the ApplicationContext is closed using the close() method on the ConfigurableApplicationContext interface. A closed context reaches its end of life; it cannot be refreshed or restarted.
+
+5.RequestHandledEvent
+This is a web-specific event telling all beans that an HTTP request has been serviced.
+
+
+e.g: // I used it to take down the server .
+public class CStartEventHandler 
+   implements ApplicationListener<ContextStartedEvent>{
+
+   public void onApplicationEvent(ContextStartedEvent event) {
+      System.out.println("ContextStartedEvent Received");
+   }
+}
+
+The concept of transactions can be described with the following four key properties described as ACID −
+
+Atomicity − A transaction should be treated as a single unit of operation, which means either the entire sequence of operations is successful or unsuccessful.
+
+Consistency − This represents the consistency of the referential integrity of the database, unique primary keys in tables, etc.
+
+Isolation − There may be many transaction processing with the same data set at the same time. Each transaction should be isolated from others to prevent data corruption.
+
+Durability − Once a transaction has completed, the results of this transaction have to be made permanent and cannot be erased from the database due to system failure.
+
+HOW to use Exception Handler:
+@RequestMapping(value = "/addStudent", method = RequestMethod.POST)
+   @ExceptionHandler({SpringException.class})
+   public String addStudent( @ModelAttribute("HelloWeb")Student student, 
+      ModelMap model) {
+      
+      if(student.getName().length() < 5 ){
+         throw new SpringException("Given name is too short");
+      } else {
+         model.addAttribute("name", student.getName());
+      }
+      
+      if( student.getAge() < 10 ){
+         throw new SpringException("Given age is too low");
+      } else {
+         model.addAttribute("age", student.getAge());
+      }
+      model.addAttribute("id", student.getId());
+      return "result";
+   }
+
+Difference in annotations of beans:
+The @Repository annotation is a marker for any class that fulfils the role or stereotype of a repository (also known as Data Access Object or DAO). Among the uses of this marker is the automatic translation of exceptions, as described in Exception Translation.
+
+Spring provides further stereotype annotations: @Component, @Service, and @Controller. @Component is a generic stereotype for any Spring-managed component. @Repository, @Service, and @Controller are specializations of @Component for more specific use cases (in the persistence, service, and presentation layers, respectively). Therefore, you can annotate your component classes with @Component, but, by annotating them with @Repository, @Service, or @Controller instead, your classes are more properly suited for processing by tools or associating with aspects.
+
+For example, these stereotype annotations make ideal targets for pointcuts. @Repository, @Service, and @Controller can also carry additional semantics in future releases of the Spring Framework. Thus, if you are choosing between using @Component or @Service for your service layer, @Service is clearly the better choice. Similarly, as stated earlier, @Repository is already supported as a marker for automatic exception translation in your persistence layer.
+  
+------------------->
+Differences between @Component, @Repository, @Controller and @Service
+@Component
+
+This is a general-purpose stereotype annotation indicating that the class is a spring component.
+
+What’s special about @Component
+<context:component-scan> only scans @Component and does not look for @Controller, @Service and @Repository in general. They are scanned because they themselves are annotated with @Component.
+
+Just take a look at @Controller, @Service and @Repository annotation definitions:
+
+@Component
+public @interface Service {
+    ….
+}
+ 
+
+@Component
+public @interface Repository {
+    ….
+}
+ 
+
+@Component
+public @interface Controller {
+    …
+}
+Thus, it’s not wrong to say that @Controller, @Service and @Repository are special types of @Component annotation. <context:component-scan> picks them up and registers their following classes as beans, just as if they were annotated with @Component.
+
+Special type annotations are also scanned, because they themselves are annotated with @Component annotation, which means they are also @Components. If we define our own custom annotation and annotate it with @Component, it will also get scanned with <context:component-scan>
+
+@Repository
+
+This is to indicate that the class defines a data repository.
+
+What’s special about @Repository?
+
+In addition to pointing out, that this is an Annotation based Configuration, @Repository’s job is to catch platform specific exceptions and re-throw them as one of Spring’s unified unchecked exception. For this, we’re provided with PersistenceExceptionTranslationPostProcessor, that we are required to add in our Spring’s application context like this:
+
+<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+This bean post processor adds an advisor to any bean that’s annotated with @Repository so that any platform-specific exceptions are caught and then re-thrown as one of Spring’s unchecked data access exceptions.
+
+@Controller
+
+The @Controller annotation indicates that a particular class serves the role of a controller. The @Controller annotation acts as a stereotype for the annotated class, indicating its role.
+
+What’s special about @Controller?
+
+We cannot switch this annotation with any other like @Service or @Repository, even though they look same. The dispatcher scans the classes annotated with @Controller and detects methods annotated with @RequestMapping annotations within them. We can use @RequestMapping on/in only those methods whose classes are annotated with @Controller and it will NOT work with @Component, @Service, @Repository etc...
+
+Note: If a class is already registered as a bean through any alternate method, like through @Bean or through @Component, @Service etc... annotations, then @RequestMapping can be picked if the class is also annotated with @RequestMapping annotation. But that's a different scenario.
+
+@Service
+
+@Service beans hold the business logic and call methods in the repository layer.
+
+What’s special about @Service?
+
+Apart from the fact that it's used to indicate, that it's holding the business logic, there’s nothing else noticeable in this annotation; but who knows, Spring may add some additional exceptional in future.
+
+What else?
+
+Similar to above, in the future Spring may add special functionalities for @Service, @Controller and @Repository based on their layering conventions. Hence, it's always a good idea to respect the convention and use it in line with layers.
+  
+   
+1. mvc:annotation-driven vs component-scan.
+
+mvc:annotation-driven is used for enabling the Spring MVC components with its default configurations.
+
+If you dont include mvc:annotation-driven also your MVC application would work if you have used the context:component-scan for creating the beans or defined the beans in your XML file
+
+. But, mvc:annotation-driven does some extra job on configuring the special beans that would not have been configured if you are not using this element in your XML file.
+
+This tag would registers the HandlerMapping and HandlerAdapter required to dispatch requests to your @Controllers. In addition, it also applies some defaults based on what is present in your classpath. Such defaults are
+
+2. <context:annotation-config> vs  <context:component-scan>.
+
+<context:annotation-config> is used to activate annotations in beans already registered in the application context (no matter if they were defined with XML or by package scanning).
+
+<context:component-scan> can also do what <context:annotation-config> does but <context:component-scan> also scans packages to find and register beans within the application context.
+
+--> In simple words <context:annotation-config> will activate the annotation in the registered bean , so the annotation could be e.g autowire.
+So in case you manually register bean by putting in XML and not using component-scan in this case you have to add <context:annotation-config>. In order to autowire to work.
+Also , There is no need of <context:annotation-config> in case of you are using component-scan .
+But if you are trying to use combo of component-scan and manually registeration . In this case things will not work as expected you need <context:annotation-config>.
+
+
+----------------xxx----------
+
+1. @RequestMapping("/greet") --> To map request, this would be on top of the bean.
+2. @PathVariable
+@RequestMapping("/welcome/countryName/{userNAme}")
+public ModelAndView(@PathVariable ("userName", String s)){
+
+}
+3. Requestparam
+@Requestmapping(value="/submit", method=RequestMethod.POST)
+public MOdelAndView submit(@RequestParam ("StudentName")){
+
+}
+4. Model Attribute.
+// Now you can get things from url .This is helpful in case of we have more data in the query params.
+public ModelAndView submit(@ModelAttribute("student") Student student){
+
+}
+ModelAttribute on method:
+@ModelAttribute methods are invoked before the controller methods annotated with @RequestMapping are invoked. The logic behind the sequence is that, the model object has to be created before any processing starts inside the controller methods.
+
+5. @RequestBody : Sends body part of the request.
+
+6. BindingResult.
+
+public ModelAndView(@ModelAttribute ("student1") Student student, BindingResult e){
+	if(e.hasErrors())
+	{ ...
+	}
+	<form: error> can be used to show problem with input.
+}
+
+7. @InitBinder.
+Pre Bind processing.
+Custom bind processing (date formats)
+Skipping elements.
+
+@InitBinder // This method will be in controller.
+public void initBinder(WebDataBinder wb){
+ //do not bind the field id
+	wb.setDisallowedFields(new Strin()[], "id")
+}
+
+8. @Valid , @Size, @Pattern
+
+public ModelAndView submit(@Valid @ModelAttribute("student") Student student){...}
+
+This will be applied to the the ModelAttribute or ResponseBody.
+And suppose entity like Student will be having the criteria like
+@Size(min = 1,max=30, message = "Enter valid data")
+// Above message will be shown on UI directly in form:error.
+Simlarly , 
+@Pattern(reexp = "[^0-a]*") // Excludes integer from string.
+@Past for date. Can't have future value.
+@Max , @Future , @min , @notNull @NotEmpty.
+
+
+9. @RestController : Its combination of @ResponseBody and @Controller .
+
+YOU CAN also create custom annotation for validation.
+1. Create annotation.
+@Documented
+@Constraint(validateby: HobbyValidator.class)
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.Runtime)
+public @interface {
+	String message () default ""; .. 
+}
+
+HobbyValidator implements ConstrainValidator<IsValidHobby, String>{
+	@Override 
+	initialized
+	@Override 
+	public boolena isValid (String s , Context ..){
+	}
+}
+
+Then you have interceptors.
+Extend : HandlerInterceptorAdaptor class
+
+override : preHandle, postHandle , afterCompletion
+<mvc: interceptor> 
+	<mvc : mappingpath="">
+	<bean class = "...xyz">
+</mvc: interceptor>
+
+<beans>
+    <bean id="handlerMapping"
+          class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="interceptors">
+            <list>
+                <ref bean="officeHoursInterceptor"/>
+            </list>
+        </property>
+        <property name="mappings">
+            <value>
+                /*.form=editAccountFormController
+                /*.view=editAccountFormController
+            </value>
+        </property>
+    </bean>
+
+    <bean id="officeHoursInterceptor"
+          class="samples.TimeBasedAccessInterceptor">
+        <property name="openingTime" value="9"/>
+        <property name="closingTime" value="18"/>
+    </bean>
+<beans>
+
+public class TimeBasedAccessInterceptor extends HandlerInterceptorAdapter {
+
+    private int openingTime;
+    private int closingTime;
+
+    public void setOpeningTime(int openingTime) {
+        this.openingTime = openingTime;
+    }
+
+    public void setClosingTime(int closingTime) {
+        this.closingTime = closingTime;
+    }
+
+    public boolean preHandle(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Object handler) throws Exception {
+
+        Calendar cal = Calendar.getInstance();
+        int hour = cal.get(HOUR_OF_DAY);
+        if (openingTime <= hour < closingTime) {
+            return true;
+        } else {
+            response.sendRedirect("http://host.com/outsideOfficeHours.html");
+            return false;
+        }
+    }
+}
+Whats difference between interceptor and AOP
+First, there are Handler Interceptors, which are part of the Spring MVC framework, and allow you to add interceptor logic to web requests
+
+Then you have Method Interceptors, which are part of the Spring AOP framework. These are much more general mechanism than Handler Interceptors, but also potentially more complex. 
+
+
+@ExceptionHandler and @ControllerAdvice
+https://dzone.com/articles/global-exception-handling-with-controlleradvice#:~:text=%40ExceptionHandler%20allows%20you%20to%20define,the%20name%20suggests%2C%20handles%20exceptions.&text=Using%20%40ControllerAdvice%20along%20with%20%40ExceptionHandler,extend%20another%20class%20every%20time.
+@ExceptionHandler allows you to define a method that, as the name suggests, handles exceptions.
+Using @ControllerAdvice along with @ExceptionHandler prevents this by providing global (and more specific) error handling so you don’t need to remember to implement them yourself or extend another class every time.
+
+Exception	HTTP Status Code
+ConversionNotSupportedException	500 (Internal Server Error)
+HttpMediaTypeNotAcceptableException	406 (Not Acceptable)
+HttpMediaTypeNotSupportedException	415 (Unsupported Media Type)
+HttpMessageNotReadableException	400 (Bad Request)
+HttpMessageNotWritableException	500 (Internal Server Error)
+HttpRequestMethodNotSupportedException	405 (Method Not Allowed)
+MissingServletRequestParameterException	400 (Bad Request)
+NoSuchRequestHandlingMethodException	404 (Not Found)
+TypeMismatchException	400 (Bad Request)
+
+

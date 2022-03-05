@@ -1,0 +1,244 @@
+application context :
+
+	<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="java:comp/env/jdbc/sisDB" />
+	</bean>
+
+	<bean class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" id="entityManagerFactory">
+		<property name="persistenceXmlLocation" value="classpath:META-INF/persistence.xml"/>
+		<property name="persistenceUnitName" value="sis-pu"/>
+		<property name="packagesToScan" value="edu.gcu.*"/>
+		<property name="dataSource" ref="dataSource" />
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="databasePlatform" value="org.hibernate.dialect.SQLServer2012Dialect" />
+				<property name="generateDdl" value="true" />
+				<property name="showSql" value="true" />
+			</bean>
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>
+				<prop key="net.sf.ehcache.configurationResourceName">ehcache.xml</prop>
+				<prop key="hibernate.cache.use_second_level_cache">true</prop>
+				<prop key="hibernate.cache.use_structured_entries">true</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.generate_statistics">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean class="org.springframework.orm.jpa.JpaTransactionManager" id="transactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+
+	<tx:annotation-driven mode="aspectj" transaction-manager="transactionManager" />
+	<tx:annotation-driven />
+</beans>
+
+In Java :
+@Repository
+public class BaseJpaDao
+{
+
+
+	@PersistenceContext
+	private EntityManager entityManager;
+....
+}
+How are the entity written::
+@Entity
+@Table(name = "scholarship_notes")
+@NamedQuery(name = "ScholarshipNotes.findAll", query = "SELECT sn FROM ScholarshipNotes sn")
+public class ScholarshipNotes extends Auditable implements Serializable {
+...
+}
+
+
+<ehcache>
+    <defaultCache eternal="false"
+         overflowToDisk="false"
+         maxElementsInMemory="50000"
+         timeToIdleSeconds="30"
+         timeToLiveSeconds="86400"
+         memoryStoreEvictionPolicy="LRU"/>
+       <!--@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region="edu.gcu.course.model.NoteReason", include="all") -->
+    <cache name="edu.gcu.course.model.NoteReason"
+           maxElementsInMemory="50000"
+           eternal="false"
+           overflowToDisk="false"
+           timeToLiveSeconds="86400"
+           memoryStoreEvictionPolicy="LFU" />
+
+
+**Working of BaseJpaDao : 
+	
+	We use : TypedQuery at multiple places .
+	
+	Bulk save examples :
+	
+		public <T> void bulkSave(Collection<T> entities) {
+		int counter=0;
+		for(T entity : entities){
+			if(++counter%20==0){
+				entityManager.flush();
+				entityManager.clear();
+			}
+			entityManager.persist(entity);
+		}
+		entityManager.flush();
+	}
+	
+	    public <T> void bulkSave(Set<T> entities) {
+        for(T entity : entities){
+            entityManager.persist(entity); // **** not this.
+        }
+        entityManager.flush();
+    }
+    public <T> void bulkUpdate(Set<T> entities) {
+        for(T entity : entities){
+            entityManager.merge(entity); // *** note this.
+        }
+        entityManager.flush();
+    }
+	
+		public <T> void bulkUpdateSession(Set<T> entities) {
+		Session session = entityManager.unwrap(Session.class); // This is something to be noteed ****
+		for(T entity : entities){
+			session.update(entity);
+		}
+		session.flush(); // --** this as well
+	}
+	
+*******Ways to get data from entity manager :
+	Query
+
+Query refers to JPQL/HQL query with syntax similar to SQL generally used to execute DML statements(CRUD operations).
+
+In JPA, you can create a query using entityManager.createQuery(). You can look into API for more detail.
+
+In Hibernate, you use session.createQuery()"
+
+NativeQuery
+
+Native query refers to actual sql queries (referring to actual database objects). These queries are the sql statements which can be directly executed in database using a database client.
+
+JPA : entityManager.createNativeQuery() Hibernate (Non-JPA implementation): session.createSQLQuery()
+
+NamedQuery
+
+Similar to how the constant is defined. NamedQuery is the way you define your query by giving it a name. You could define this in mapping file in hibernate or also using annotations at entity level.
+
+TypedQuery
+
+TypedQuery gives you an option to mention the type of entity when you create a query and therefore any operation thereafter does not need an explicit cast to the intended type. Whereas the normal Query API does not return the exact type of Object you expect and you need to cast.
+
+--------------************** Spring boot Annotation configuration ..
+CommandLineRunner :: 
+Spring Boot provides two interfaces, CommandLineRunner and ApplicationRunner, to run specific pieces of code when an application is fully started. These interfaces get called just before run() once SpringApplication completes.
+
+Application.java
+
+@EnableAutoConfiguration
+@EnableJpaRepositories
+@SpringBootApplication
+@EnableAsync
+@ImportResource({ "classpath:applicationContext-jpa.xml" })
+public class Application extends SpringBootServletInitializer implements CommandLineRunner {  ******Note : SpringBootServletInitializer we need this to run with external tomcat.
+    private static Class<Application> applicationClass = Application.class;
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(applicationClass);
+    }
+
+    public void run(String... args) throws Exception {
+    }
+
+    @Bean(name = "threadPoolExecutors")
+    public ThreadPoolTaskExecutor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(8);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(11);
+        executor.setThreadNamePrefix("threadPoolExecutor-");
+        executor.initialize();
+        return executor;
+    }
+
+}
+
+
+Configuration :: 
+
+@Configuration
+public class DatasourceConfig {
+    @Autowired
+    @Value("${cvue.url}")
+    private String cvueUrl;
+
+    @Autowired
+    @Value("${cvue.user}")
+    private String cvueUser;
+
+    @Autowired
+    @Value("${cvue.pwd}")
+    private String cvuePwd;
+
+    @Bean(name = "dataSource")
+    @Primary
+    @ConfigurationProperties(prefix = "datasource.primary")
+    public DataSource dataSource() {
+        JndiDataSourceLookup dataSourceLookup = new JndiDataSourceLookup();
+        DataSource dataSource = dataSourceLookup.getDataSource("java:comp/env/jdbc/sisDB");
+        return dataSource;
+    }
+
+    @Bean(name = "cVueDataSource")
+    public DataSource campusVueDataSource() {
+        final SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+        dataSource.setDriver(new net.sourceforge.jtds.jdbc.Driver());
+        dataSource.setUrl(cvueUrl);
+        dataSource.setUsername(cvueUser);
+        dataSource.setPassword(cvuePwd);
+        return dataSource;
+    }
+	
+	<context:property-placeholder location="classpath*:jpa${env}.properties" order="1" ignore-unresolvable="true"/>
+	<context:property-placeholder location="classpath*:memcached${env}.properties" order="2" ignore-unresolvable="true"/>
+	<context:property-placeholder location="classpath*:database${env}.properties" order="2" ignore-unresolvable="true"/>
+	<context:property-placeholder location="classpath*:application${env}.properties" order="2" ignore-unresolvable="true"/>
+	<context:property-placeholder location="classpath*:message${env}.properties" ignore-resource-not-found="true"/>
+	<context:annotation-config/>
+	<aop:aspectj-autoproxy />
+	
+	
+	///////// This is how we load memcached.
+	<bean name="defaultMemcachedClient" class="com.google.code.ssm.CacheFactory">
+		<property name="cacheClientFactory">
+			<bean class="com.google.code.ssm.providers.xmemcached.MemcacheClientFactoryImpl" />
+		</property>
+		<property name="addressProvider">
+			<bean class="com.google.code.ssm.config.DefaultAddressProvider">
+				<property name="address" value="${memcached.server.ipAddress}:${memcached.server.port}" />
+			</bean>
+		</property>
+		<property name="configuration">
+			<bean class="com.google.code.ssm.providers.CacheConfiguration">
+				<property name="consistentHashing" value="true" />
+			</bean>
+		</property>
+	</bean>
+	
+	  @ReadThroughSingleCache(namespace = "CplxObj", expiration = 0)
+public List<Answer> showAnswer(int id){
+	///////
+	Where as we use hibernate cache as below 
+	@Entity
+@Table (name = "course_level")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region="edu.gcu.course.model.CourseLevel", include="all")
+
+	
